@@ -23,12 +23,15 @@ export default function HomePage() {
   const [showScanner, setShowScanner] = useState(false);
   const [location, setLocation] = useState<LocationInfo | null>(null);
   const [availableRetailers, setAvailableRetailers] = useState<Retailer[] | undefined>(undefined);
+  const [zip, setZip] = useState("");
 
   const handleSearch = async (query: string) => {
     setLoading(true);
     setSearched(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const params = new URLSearchParams({ q: query });
+      if (zip.length === 5) params.set("zip", zip);
+      const res = await fetch(`/api/search?${params}`);
       const data = await res.json();
       setProducts(data.products || []);
       if (data.location) setLocation(data.location);
@@ -80,6 +83,8 @@ export default function HomePage() {
       <SearchBar
         onSearch={handleSearch}
         onScanBarcode={() => setShowScanner(true)}
+        onZipChange={setZip}
+        zip={zip}
         loading={loading}
       />
 
@@ -96,7 +101,7 @@ export default function HomePage() {
       {/* Results */}
       {!loading && searched && (
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
             <h2 className="text-lg font-semibold text-gray-900">
               {products.length > 0
                 ? `Comparing prices across ${new Set(products.map(p => p.retailer)).size} retailers`

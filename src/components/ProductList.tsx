@@ -166,9 +166,9 @@ export default function ProductList({
               </div>
             </div>
 
-            {/* Retailer Price Row — dynamic columns */}
+            {/* Retailer Price Row — scrollable on mobile */}
             <div
-              className="border-t border-gray-100 px-4 py-3 grid gap-2 overflow-x-auto"
+              className="border-t border-gray-100 px-4 py-3 flex gap-2 overflow-x-auto sm:grid"
               style={{ gridTemplateColumns: `repeat(${retailers.length}, minmax(0, 1fr))` }}
             >
               {retailers.map((retailer) => {

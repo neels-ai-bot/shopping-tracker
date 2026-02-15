@@ -101,7 +101,7 @@ export default function ShrinkflationPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="p-4 rounded-xl bg-white border border-gray-200 shadow-sm text-center">
           <AlertTriangle className="h-6 w-6 text-amber-500 mx-auto mb-1" />
           <p className="text-2xl font-bold text-gray-900">{alerts.length}</p>

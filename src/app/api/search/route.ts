@@ -11,7 +11,7 @@ import { search as searchHeb } from "@/lib/scrapers/heb";
 import { search as searchWegmans } from "@/lib/scrapers/wegmans";
 import { search as searchAldi } from "@/lib/scrapers/aldi";
 import { search as searchTraderjoes } from "@/lib/scrapers/traderjoes";
-import { detectLocation } from "@/lib/location";
+import { detectLocation, zipToState } from "@/lib/location";
 import { getAvailableRetailers } from "@/lib/retailer-config";
 import { scoreMatch } from "@/lib/scrapers/search-utils";
 import { ProductResult, Retailer } from "@/types";
@@ -34,14 +34,24 @@ export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q");
   const retailers = request.nextUrl.searchParams.get("retailers");
   const regionParam = request.nextUrl.searchParams.get("region");
+  const zipParam = request.nextUrl.searchParams.get("zip");
 
   if (!query) {
     return NextResponse.json({ error: "Query parameter 'q' is required" }, { status: 400 });
   }
 
-  // Detect region from param, or IP
+  // Detect region from zip, param, or IP
   let region = regionParam || undefined;
   let locationInfo = null;
+
+  if (!region && zipParam) {
+    const stateFromZip = zipToState(zipParam);
+    if (stateFromZip) {
+      region = stateFromZip;
+      locationInfo = { city: "", region: stateFromZip, country: "US", zip: zipParam, lat: 0, lon: 0 };
+    }
+  }
+
   if (!region) {
     try {
       const forwarded = request.headers.get("x-forwarded-for");

@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import Link from "next/link";
 import "./globals.css";
 import {
-  Search,
+  Home,
   ShoppingCart,
   Bell,
   TrendingDown,
@@ -36,7 +36,7 @@ export const viewport: Viewport = {
 };
 
 const navItems = [
-  { href: "/", label: "Search", icon: Search },
+  { href: "/", label: "Home", icon: Home },
   { href: "/compare", label: "Compare", icon: BarChart3 },
   { href: "/list", label: "List", icon: ShoppingCart },
   { href: "/alerts", label: "Alerts", icon: Bell },
