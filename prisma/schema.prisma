@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String         @id @default(cuid())
+  name          String
+  upc           String?        @unique
+  category      String?
+  brand         String?
+  imageUrl      String?
+  packageSize   String?
+  packageSizeOz Float?
+  prices        Price[]
+  alerts        Alert[]
+  sizeHistory   SizeHistory[]
+  equivalents   BrandMapping[] @relation("source")
+  createdAt     DateTime       @default(now())
+}
+
+model Price {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  retailer  String
+  price     Float
+  unitPrice Float?
+  url       String?
+  inStock   Boolean  @default(true)
+  scrapedAt DateTime @default(now())
+}
+
+model ShoppingList {
+  id        String         @id @default(cuid())
+  name      String
+  items     ShoppingItem[]
+  createdAt DateTime       @default(now())
+}
+
+model ShoppingItem {
+  id        String       @id @default(cuid())
+  listId    String
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int          @default(1)
+  productId String?
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  targetPrice Float
+  retailer    String?
+  active      Boolean  @default(true)
+  triggered   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model SizeHistory {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  packageSize String
+  sizeOz      Float
+  price       Float
+  retailer    String
+  recordedAt  DateTime @default(now())
+}
+
+model BrandMapping {
+  id              String  @id @default(cuid())
+  sourceProductId String
+  sourceProduct   Product @relation("source", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  equivalentName  String
+  equivalentStore String
+  confidence      Float
+}
