@@ -76,13 +76,9 @@ describe("parseSizeToOz", () => {
   });
 
   // ── Pounds ──
-  it("parses pounds (lb abbreviation)", () => {
-    // Note: "2 lb" and "5 lbs" are caught by the liters regex first
-    // because "l" in "lb" matches the liters pattern /([\d.]+)\s*l(?:iters?)?/
-    // This is a known regex ordering issue — "lb" inputs return liters conversion
-    expect(parseSizeToOz("2 lb")).toBe(
-      Math.round(2 * 33.814 * 100) / 100
-    );
+  it("parses pounds (lb)", () => {
+    // 2 lb = 32 oz
+    expect(parseSizeToOz("2 lb")).toBe(32);
   });
 
   it("parses pounds (pounds)", () => {

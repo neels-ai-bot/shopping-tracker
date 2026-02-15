@@ -128,17 +128,17 @@ export function parseSizeToOz(sizeStr: string): number | null {
   const kgMatch = lower.match(/([\d.]+)\s*kg/);
   if (kgMatch) return Math.round((parseFloat(kgMatch[1]) * 35.274) * 100) / 100;
 
+  // Match pounds (before liters so "lb" isn't caught by the "l" pattern)
+  const lbMatch = lower.match(/([\d.]+)\s*(?:lb|pound)s?/);
+  if (lbMatch) return Math.round(parseFloat(lbMatch[1]) * 16 * 100) / 100;
+
   // Match liters - convert to fl oz (1 L = 33.814 fl oz)
-  const lMatch = lower.match(/([\d.]+)\s*l(?:iters?)?/);
+  const lMatch = lower.match(/([\d.]+)\s*l(?:iters?)?(?:\b|$)/);
   if (lMatch) return Math.round((parseFloat(lMatch[1]) * 33.814) * 100) / 100;
 
   // Match ml
   const mlMatch = lower.match(/([\d.]+)\s*ml/);
   if (mlMatch) return Math.round((parseFloat(mlMatch[1]) / 29.5735) * 100) / 100;
-
-  // Match pounds
-  const lbMatch = lower.match(/([\d.]+)\s*(?:lb|pound)s?/);
-  if (lbMatch) return Math.round(parseFloat(lbMatch[1]) * 16 * 100) / 100;
 
   // Match count (for items like paper towels)
   const ctMatch = lower.match(/([\d.]+)\s*(?:ct|count|rolls?|sheets?|pack)/);
