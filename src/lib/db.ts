@@ -43,6 +43,7 @@ function createNoOpProxy(): any {
         {},
         {
           get(_t, method) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             return (..._args: unknown[]) => {
               if (method === "findMany") return Promise.resolve([]);
               if (method === "findUnique" || method === "findFirst")

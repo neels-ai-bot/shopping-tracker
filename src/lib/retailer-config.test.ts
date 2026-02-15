@@ -4,7 +4,6 @@ import {
   retailerDisplayName,
   retailerColor,
   retailerTextColor,
-  RETAILER_CONFIGS,
 } from "./retailer-config";
 
 describe("getAvailableRetailers", () => {
