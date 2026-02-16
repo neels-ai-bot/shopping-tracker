@@ -7,7 +7,7 @@ import {
   retailerColor,
   retailerTextColor,
 } from "@/lib/utils";
-import { ShoppingCart, Bell, ExternalLink } from "lucide-react";
+import { ShoppingCart, Bell, ExternalLink, Share2 } from "lucide-react";
 
 const DEFAULT_RETAILERS: Retailer[] = ["walmart", "target", "amazon", "costco", "kroger", "wholefoods", "traderjoes"];
 
@@ -84,6 +84,15 @@ function groupProducts(products: ProductResult[]): GroupedProduct[] {
   return groups;
 }
 
+const shareProduct = async (name: string, price: number, retailer: string) => {
+  const text = `${name} - $${price.toFixed(2)} at ${retailer}. Found on Shopping Tracker!`;
+  if (navigator.share) {
+    try { await navigator.share({ title: name, text }); } catch { /* user cancelled */ }
+  } else {
+    await navigator.clipboard.writeText(text);
+  }
+};
+
 export default function ProductList({
   products,
   availableRetailers,
@@ -92,7 +101,7 @@ export default function ProductList({
 }: ProductListProps) {
   if (products.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-lg">No products found</p>
         <p className="text-sm mt-1">Try a different search term</p>
       </div>
@@ -113,11 +122,11 @@ export default function ProductList({
         return (
           <div
             key={group.upc || `${group.name}-${index}`}
-            className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+            className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden"
           >
             {/* Product Header */}
             <div className="flex items-center gap-4 p-4">
-              <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+              <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-gray-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                 {group.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -126,15 +135,15 @@ export default function ProductList({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <ShoppingCart className="h-5 w-5 text-gray-400" />
+                  <ShoppingCart className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {group.brand ? `${group.brand} — ` : ""}
                   {stripBrand(group.name, group.brand)}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-500 mt-0.5">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   {group.packageSize && <span>{group.packageSize}</span>}
                   {group.category && (
                     <>
@@ -148,7 +157,7 @@ export default function ProductList({
                 {onAddToList && (
                   <button
                     onClick={() => onAddToList(group.prices.values().next().value!)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                     title="Add to list"
                   >
                     <ShoppingCart className="h-4 w-4 text-gray-600" />
@@ -157,18 +166,28 @@ export default function ProductList({
                 {onSetAlert && (
                   <button
                     onClick={() => onSetAlert(group.prices.values().next().value!)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                     title="Set price alert"
                   >
                     <Bell className="h-4 w-4 text-gray-600" />
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    const best = group.prices.get(group.bestRetailer)!;
+                    shareProduct(group.name, best.price, retailerDisplayName(group.bestRetailer));
+                  }}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  title="Share product"
+                >
+                  <Share2 className="h-4 w-4 text-gray-600" />
+                </button>
               </div>
             </div>
 
             {/* Retailer Price Row — scrollable on mobile */}
             <div
-              className="border-t border-gray-100 px-4 py-3 flex gap-2 overflow-x-auto sm:grid"
+              className="border-t border-gray-100 dark:border-slate-700 px-4 py-3 flex gap-2 overflow-x-auto sm:grid"
               style={{ gridTemplateColumns: `repeat(${retailers.length}, minmax(0, 1fr))` }}
             >
               {retailers.map((retailer) => {
@@ -182,8 +201,8 @@ export default function ProductList({
                       entry
                         ? isBest
                           ? "bg-green-50 ring-1 ring-green-300"
-                          : "bg-gray-50"
-                        : "bg-gray-50 opacity-40"
+                          : "bg-gray-50 dark:bg-slate-800/50"
+                        : "bg-gray-50 dark:bg-slate-800/50 opacity-40"
                     }`}
                   >
                     {/* Retailer label */}
@@ -191,7 +210,7 @@ export default function ProductList({
                       <div
                         className={`w-2 h-2 rounded-full ${retailerColor(retailer)}`}
                       />
-                      <span className="text-[11px] font-medium text-gray-500 truncate">
+                      <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 truncate">
                         {retailerDisplayName(retailer)}
                       </span>
                     </div>
@@ -200,13 +219,13 @@ export default function ProductList({
                       <>
                         <p
                           className={`text-base font-bold ${
-                            isBest ? "text-green-700" : "text-gray-900"
+                            isBest ? "text-green-700" : "text-gray-900 dark:text-gray-100"
                           }`}
                         >
                           {formatPrice(entry.price)}
                         </p>
                         {entry.unitPrice && (
-                          <p className="text-[10px] text-gray-400">
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
                             ${entry.unitPrice.toFixed(2)}/oz
                           </p>
                         )}
@@ -227,7 +246,7 @@ export default function ProductList({
                         )}
                       </>
                     ) : (
-                      <p className="text-xs text-gray-400 mt-1">N/A</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">N/A</p>
                     )}
                   </div>
                 );
@@ -236,7 +255,7 @@ export default function ProductList({
 
             {/* Savings summary */}
             {sortedPrices.length > 1 && (
-              <div className="border-t border-gray-100 px-4 py-2 bg-gray-50 text-xs text-gray-500 flex items-center justify-between">
+              <div className="border-t border-gray-100 dark:border-slate-700 px-4 py-2 bg-gray-50 dark:bg-slate-800/50 text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
                 <span>
                   Best at{" "}
                   <span className={`font-semibold ${retailerTextColor(group.bestRetailer)}`}>

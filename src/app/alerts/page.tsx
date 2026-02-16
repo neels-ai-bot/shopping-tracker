@@ -15,7 +15,6 @@ function AlertsContent() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(!!productParam);
 
-  // Form state
   const [searchQuery, setSearchQuery] = useState(productParam || "");
   const [targetPrice, setTargetPrice] = useState(
     priceParam ? (parseFloat(priceParam) * 0.9).toFixed(2) : ""
@@ -45,7 +44,6 @@ function AlertsContent() {
 
     setCreating(true);
     try {
-      // First search for the product to get its ID
       const searchRes = await fetch(
         `/api/search?q=${encodeURIComponent(searchQuery)}&retailers=walmart`
       );
@@ -57,12 +55,11 @@ function AlertsContent() {
         return;
       }
 
-      // Create alert via API
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId: product.upc || searchQuery, // Use search query as fallback
+          productId: product.upc || searchQuery,
           targetPrice: parseFloat(targetPrice),
           retailer: selectedRetailer === "any" ? null : selectedRetailer,
         }),
@@ -92,7 +89,6 @@ function AlertsContent() {
         body: JSON.stringify({ alertId, active }),
       });
     } catch {
-      // Revert on error
       fetchAlerts();
     }
   };
@@ -114,10 +110,10 @@ function AlertsContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             Price Alerts
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Get notified when prices drop to your target
           </p>
         </div>
@@ -134,24 +130,24 @@ function AlertsContent() {
       {showCreateForm && (
         <form
           onSubmit={createAlert}
-          className="p-4 rounded-2xl border border-blue-200 bg-blue-50 space-y-3"
+          className="p-4 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 space-y-3"
         >
-          <h3 className="font-semibold text-gray-900">Create Price Alert</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Create Price Alert</h3>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Product name..."
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             required
           />
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
                 Target Price
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                   $
                 </span>
                 <input
@@ -160,13 +156,13 @@ function AlertsContent() {
                   min="0.01"
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(e.target.value)}
-                  className="w-full pl-7 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  className="w-full pl-7 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
                 Store
               </label>
               <select
@@ -174,7 +170,7 @@ function AlertsContent() {
                 onChange={(e) =>
                   setSelectedRetailer(e.target.value as Retailer | "any")
                 }
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-gray-100"
               >
                 <option value="any">Any Store</option>
                 <option value="walmart">Walmart</option>
@@ -196,7 +192,7 @@ function AlertsContent() {
             <button
               type="button"
               onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>
@@ -205,11 +201,19 @@ function AlertsContent() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <div className="w-10 h-10 rounded-lg skeleton" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-40 rounded skeleton" />
+                <div className="h-3 w-28 rounded skeleton" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : alerts.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
           <p className="text-lg">No alerts yet</p>
           <p className="text-sm mt-1">
@@ -218,61 +222,43 @@ function AlertsContent() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Triggered Alerts */}
           {triggeredAlerts.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-2 flex items-center gap-1">
+              <h2 className="text-sm font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-2 flex items-center gap-1">
                 <Check className="h-4 w-4" />
                 Triggered ({triggeredAlerts.length})
               </h2>
               <div className="space-y-2">
                 {triggeredAlerts.map((alert) => (
-                  <AlertCard
-                    key={alert.id}
-                    alert={alert}
-                    onToggle={toggleAlert}
-                    onDelete={deleteAlert}
-                  />
+                  <AlertCard key={alert.id} alert={alert} onToggle={toggleAlert} onDelete={deleteAlert} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Active Alerts */}
           {activeAlerts.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-2 flex items-center gap-1">
+              <h2 className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-1">
                 <Bell className="h-4 w-4" />
                 Active ({activeAlerts.length})
               </h2>
               <div className="space-y-2">
                 {activeAlerts.map((alert) => (
-                  <AlertCard
-                    key={alert.id}
-                    alert={alert}
-                    onToggle={toggleAlert}
-                    onDelete={deleteAlert}
-                  />
+                  <AlertCard key={alert.id} alert={alert} onToggle={toggleAlert} onDelete={deleteAlert} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Inactive Alerts */}
           {inactiveAlerts.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+              <h2 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                 <BellOff className="h-4 w-4" />
                 Inactive ({inactiveAlerts.length})
               </h2>
               <div className="space-y-2">
                 {inactiveAlerts.map((alert) => (
-                  <AlertCard
-                    key={alert.id}
-                    alert={alert}
-                    onToggle={toggleAlert}
-                    onDelete={deleteAlert}
-                  />
+                  <AlertCard key={alert.id} alert={alert} onToggle={toggleAlert} onDelete={deleteAlert} />
                 ))}
               </div>
             </div>
@@ -296,43 +282,41 @@ function AlertCard({
     <div
       className={`flex items-center gap-3 p-3 rounded-xl border shadow-sm ${
         alert.triggered
-          ? "border-green-200 bg-green-50"
+          ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20"
           : alert.active
-            ? "border-gray-200 bg-white"
-            : "border-gray-100 bg-gray-50 opacity-60"
+            ? "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+            : "border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 opacity-60"
       }`}
     >
       <div
         className={`p-2 rounded-lg ${
-          alert.triggered ? "bg-green-100" : "bg-blue-50"
+          alert.triggered ? "bg-green-100 dark:bg-green-900/40" : "bg-blue-50 dark:bg-blue-900/30"
         }`}
       >
         <Target
           className={`h-5 w-5 ${
-            alert.triggered ? "text-green-600" : "text-blue-600"
+            alert.triggered ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400"
           }`}
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900 truncate">
+        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
           {alert.productName}
         </p>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <span>Target: {formatPrice(alert.targetPrice)}</span>
           {alert.retailer && (
             <>
-              <span className="text-gray-300">·</span>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
               <span className="flex items-center gap-1">
-                <span
-                  className={`w-2 h-2 rounded-full ${retailerColor(alert.retailer)}`}
-                />
+                <span className={`w-2 h-2 rounded-full ${retailerColor(alert.retailer)}`} />
                 {retailerDisplayName(alert.retailer)}
               </span>
             </>
           )}
           {alert.currentPrice !== undefined && (
             <>
-              <span className="text-gray-300">·</span>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
               <span>Now: {formatPrice(alert.currentPrice)}</span>
             </>
           )}
@@ -341,7 +325,7 @@ function AlertCard({
       <div className="flex items-center gap-1">
         <button
           onClick={() => onToggle(alert.id, !alert.active)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
           title={alert.active ? "Pause alert" : "Resume alert"}
         >
           {alert.active ? (
@@ -352,7 +336,7 @@ function AlertCard({
         </button>
         <button
           onClick={() => onDelete(alert.id)}
-          className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         >
           <Trash2 className="h-4 w-4 text-red-500" />
         </button>
@@ -363,7 +347,7 @@ function AlertCard({
 
 export default function AlertsPage() {
   return (
-    <Suspense fallback={<div className="py-12 text-center text-gray-500">Loading...</div>}>
+    <Suspense fallback={<div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading...</div>}>
       <AlertsContent />
     </Suspense>
   );

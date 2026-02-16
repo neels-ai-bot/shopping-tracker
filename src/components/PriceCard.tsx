@@ -14,8 +14,8 @@ export default function PriceCard({ price, isBest = false }: PriceCardProps) {
     <div
       className={`relative rounded-xl border p-4 transition-all ${
         isBest
-          ? "border-green-500 bg-green-50 shadow-md ring-2 ring-green-200"
-          : "border-gray-200 bg-white shadow-sm hover:shadow-md"
+          ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-md ring-2 ring-green-200 dark:ring-green-800"
+          : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md"
       }`}
     >
       {isBest && (
@@ -29,7 +29,7 @@ export default function PriceCard({ price, isBest = false }: PriceCardProps) {
           <div
             className={`w-3 h-3 rounded-full ${retailerColor(price.retailer)}`}
           />
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold text-gray-900 dark:text-gray-100">
             {retailerDisplayName(price.retailer)}
           </span>
         </div>
@@ -52,11 +52,11 @@ export default function PriceCard({ price, isBest = false }: PriceCardProps) {
 
       <div className="mt-3 flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {formatPrice(price.price)}
           </p>
           {price.unitPrice && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {formatUnitPrice(price.unitPrice)}
             </p>
           )}
@@ -67,7 +67,7 @@ export default function PriceCard({ price, isBest = false }: PriceCardProps) {
             href={price.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
           >
             View <ExternalLink className="h-3 w-3" />
           </a>

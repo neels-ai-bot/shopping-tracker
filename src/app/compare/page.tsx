@@ -47,10 +47,10 @@ function CompareContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
           Price Comparison
         </h1>
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-gray-400">
           Compare prices for a product across all retailers
         </p>
       </div>
@@ -62,16 +62,26 @@ function CompareContent() {
       />
 
       {loading && (
-        <div className="flex justify-center py-12">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-gray-500">Comparing prices...</p>
-          </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full skeleton" />
+                  <div className="h-4 w-24 rounded skeleton" />
+                </div>
+                <div className="h-3 w-16 rounded skeleton" />
+              </div>
+              <div className="mt-3">
+                <div className="h-7 w-20 rounded skeleton" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {!loading && searched && !comparison && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <p className="text-lg">No results found</p>
           <p className="text-sm mt-1">Try a different product name</p>
         </div>
@@ -80,27 +90,28 @@ function CompareContent() {
       {!loading && comparison && (
         <div className="space-y-6">
           {/* Product Info */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-200 shadow-sm">
-            <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <div className="w-20 h-20 rounded-xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {comparison.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={comparison.imageUrl}
                   alt={comparison.productName}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <ShoppingCart className="h-8 w-8 text-gray-400" />
+                <ShoppingCart className="h-8 w-8 text-gray-400 dark:text-gray-500" />
               )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {comparison.productName}
               </h2>
               {comparison.upc && (
-                <p className="text-sm text-gray-400">UPC: {comparison.upc}</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">UPC: {comparison.upc}</p>
               )}
               {savingsVsHighest > 0 && (
-                <div className="flex items-center gap-1 mt-1 text-green-600">
+                <div className="flex items-center gap-1 mt-1 text-green-600 dark:text-green-400">
                   <TrendingUp className="h-4 w-4" />
                   <span className="text-sm font-semibold">
                     Save up to {formatPrice(savingsVsHighest)}
@@ -117,7 +128,7 @@ function CompareContent() {
 
           {/* Price Cards */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
               Prices by Retailer
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -134,24 +145,24 @@ function CompareContent() {
           {/* Brand Equivalents */}
           {comparison.equivalents && comparison.equivalents.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
                 Store-Brand Alternatives
               </h3>
               <div className="space-y-2">
                 {comparison.equivalents.map((eq, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-white shadow-sm"
+                    className="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
                   >
                     <div>
-                      <p className="font-medium text-gray-900">{eq.name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{eq.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {retailerDisplayName(eq.store)} ·{" "}
                         {Math.round(eq.confidence * 100)}% match
                       </p>
                     </div>
                     {eq.price > 0 && (
-                      <span className="font-bold text-gray-900">
+                      <span className="font-bold text-gray-900 dark:text-gray-100">
                         {formatPrice(eq.price)}
                       </span>
                     )}
@@ -168,7 +179,7 @@ function CompareContent() {
 
 export default function ComparePage() {
   return (
-    <Suspense fallback={<div className="py-12 text-center text-gray-500">Loading...</div>}>
+    <Suspense fallback={<div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading...</div>}>
       <CompareContent />
     </Suspense>
   );

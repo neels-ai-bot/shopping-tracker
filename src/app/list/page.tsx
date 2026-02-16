@@ -23,12 +23,10 @@ function ListContent() {
   const [tripCost, setTripCost] = useState(5);
   const [listId, setListId] = useState<string | null>(null);
 
-  // Load or create list on mount
   useEffect(() => {
     loadList();
   }, []);
 
-  // Auto-add item from URL param
   useEffect(() => {
     if (addItem && !items.some((i) => i.name === addItem)) {
       handleAddItem(addItem);
@@ -64,7 +62,6 @@ function ListContent() {
 
     try {
       if (!listId) {
-        // Create a new list with this item
         const res = await fetch("/api/list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -126,7 +123,6 @@ function ListContent() {
     setRoutes([]);
 
     try {
-      // For each item, search for prices
       const itemPrices = await Promise.all(
         items.map(async (item) => {
           const res = await fetch(
@@ -145,7 +141,6 @@ function ListContent() {
         })
       );
 
-      // Use the optimizer (client-side import)
       const { optimizeList } = await import("@/lib/optimizer");
       const optimized = optimizeList(itemPrices, tripCost);
       setRoutes(optimized);
@@ -167,16 +162,16 @@ function ListContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
             Shopping List
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-gray-400">
             Build your list and find the best store combination
           </p>
         </div>
         <button
           onClick={() => setShowReceipt(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           <FileText className="h-4 w-4" />
           Scan Receipt
@@ -184,14 +179,14 @@ function ListContent() {
       </div>
 
       {/* Trip Cost Setting */}
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-        <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0" />
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+        <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
             Extra store trip cost:
             <span className="font-bold ml-1">${tripCost}</span>
           </p>
-          <p className="text-xs text-blue-600">
+          <p className="text-xs text-blue-600 dark:text-blue-400">
             Accounts for gas/time when splitting across stores
           </p>
         </div>
@@ -218,7 +213,7 @@ function ListContent() {
       {/* Optimization Results */}
       {routes.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Optimized Shopping Routes
           </h2>
           {routes.map((route, index) => (
@@ -226,8 +221,8 @@ function ListContent() {
               key={index}
               className={`p-4 rounded-2xl border shadow-sm ${
                 index === 0
-                  ? "border-green-300 bg-green-50"
-                  : "border-gray-200 bg-white"
+                  ? "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
+                  : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800"
               }`}
             >
               {index === 0 && (
@@ -237,7 +232,7 @@ function ListContent() {
               )}
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900 capitalize">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 capitalize">
                     {route.strategy.replace(/-/g, " ")}
                   </h3>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -249,17 +244,19 @@ function ListContent() {
                         <span
                           className={`w-2 h-2 rounded-full ${retailerColor(store.retailer)}`}
                         />
-                        {retailerDisplayName(store.retailer)}
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {retailerDisplayName(store.retailer)}
+                        </span>
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {formatPrice(route.effectiveCost)}
                   </p>
                   {route.savings > 0 && (
-                    <p className="text-sm text-green-600 font-semibold">
+                    <p className="text-sm text-green-600 dark:text-green-400 font-semibold">
                       Save {formatPrice(route.savings)}
                     </p>
                   )}
@@ -271,18 +268,18 @@ function ListContent() {
                 {route.stores.map((store) => (
                   <div
                     key={store.retailer}
-                    className="text-sm border-t border-gray-200 pt-2"
+                    className="text-sm border-t border-gray-200 dark:border-slate-700 pt-2"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700 flex items-center gap-1.5">
+                      <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                         <Store className="h-3.5 w-3.5" />
                         {retailerDisplayName(store.retailer)}
                       </span>
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
                         {formatPrice(store.subtotal)}
                       </span>
                     </div>
-                    <div className="ml-5 mt-0.5 text-gray-500 text-xs">
+                    <div className="ml-5 mt-0.5 text-gray-500 dark:text-gray-400 text-xs">
                       {store.items.map((item) => (
                         <span key={item.name}>
                           {item.name} x{item.quantity} ({formatPrice(item.price)})
@@ -292,12 +289,12 @@ function ListContent() {
                     </div>
                   </div>
                 ))}
-                <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                <div className="flex items-center justify-between text-sm border-t border-gray-200 dark:border-slate-700 pt-2">
+                  <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                     <DollarSign className="h-3.5 w-3.5" />
                     Trip cost ({route.stores.length} store{route.stores.length > 1 ? "s" : ""})
                   </span>
-                  <span className="text-gray-600">{formatPrice(route.tripCost)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{formatPrice(route.tripCost)}</span>
                 </div>
               </div>
             </div>
@@ -318,7 +315,7 @@ function ListContent() {
 
 export default function ListPage() {
   return (
-    <Suspense fallback={<div className="py-12 text-center text-gray-500">Loading...</div>}>
+    <Suspense fallback={<div className="py-12 text-center text-gray-500 dark:text-gray-400">Loading...</div>}>
       <ListContent />
     </Suspense>
   );
