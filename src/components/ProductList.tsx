@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ProductResult, Retailer } from "@/types";
 import {
   formatPrice,
@@ -7,7 +8,8 @@ import {
   retailerColor,
   retailerTextColor,
 } from "@/lib/utils";
-import { ShoppingCart, Bell, ExternalLink, Share2 } from "lucide-react";
+import { ShoppingCart, Bell, ExternalLink, Share2, DollarSign, Heart } from "lucide-react";
+import { addFavorite, removeFavorite } from "@/lib/favorites";
 
 const DEFAULT_RETAILERS: Retailer[] = ["walmart", "target", "amazon", "costco", "kroger", "wholefoods", "traderjoes"];
 
@@ -21,6 +23,8 @@ interface GroupedProduct {
   prices: Map<Retailer, ProductResult>;
   bestRetailer: Retailer;
   bestPrice: number;
+  bestUnitPriceRetailer?: Retailer;
+  bestUnitPrice?: number;
 }
 
 interface ProductListProps {
@@ -60,6 +64,10 @@ function groupProducts(products: ProductResult[]): GroupedProduct[] {
         group.bestPrice = product.price;
         group.bestRetailer = product.retailer;
       }
+      if (product.unitPrice != null && (group.bestUnitPrice == null || product.unitPrice < group.bestUnitPrice)) {
+        group.bestUnitPrice = product.unitPrice;
+        group.bestUnitPriceRetailer = product.retailer;
+      }
     } else {
       // New product row
       const prices = new Map<Retailer, ProductResult>();
@@ -74,6 +82,8 @@ function groupProducts(products: ProductResult[]): GroupedProduct[] {
         prices,
         bestRetailer: product.retailer,
         bestPrice: product.price,
+        bestUnitPriceRetailer: product.unitPrice != null ? product.retailer : undefined,
+        bestUnitPrice: product.unitPrice,
       };
       const idx = groups.length;
       groups.push(newGroup);
@@ -99,6 +109,28 @@ export default function ProductList({
   onAddToList,
   onSetAlert,
 }: ProductListProps) {
+  const [sortByUnitPrice, setSortByUnitPrice] = useState(false);
+  const [favSet, setFavSet] = useState<Set<string>>(() => new Set());
+
+  const toggleFavorite = (group: GroupedProduct) => {
+    const id = group.upc || group.name;
+    const best = group.prices.get(group.bestRetailer)!;
+    if (favSet.has(id)) {
+      removeFavorite(id);
+      setFavSet((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    } else {
+      addFavorite({
+        id,
+        name: group.name,
+        brand: group.brand,
+        category: group.category,
+        price: best.price,
+        retailer: retailerDisplayName(group.bestRetailer),
+      });
+      setFavSet((prev) => new Set(prev).add(id));
+    }
+  };
+
   if (products.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -111,13 +143,55 @@ export default function ProductList({
   const retailers = availableRetailers ?? DEFAULT_RETAILERS;
   const grouped = groupProducts(products);
 
+  // When sorting by unit price, sort the groups so the one with the best unit price comes first
+  const sortedGroups = sortByUnitPrice
+    ? [...grouped].sort((a, b) => (a.bestUnitPrice ?? Infinity) - (b.bestUnitPrice ?? Infinity))
+    : grouped;
+
   return (
     <div className="space-y-4">
-      {grouped.map((group, index) => {
+      {/* Sort toggle: segmented control */}
+      <div className="flex items-center gap-1">
+        <DollarSign className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
+        <span className="text-xs text-gray-500 dark:text-gray-400 mr-2">Sort by:</span>
+        <div className="inline-flex rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
+          <button
+            onClick={() => setSortByUnitPrice(false)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              !sortByUnitPrice
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            Total Price
+          </button>
+          <button
+            onClick={() => setSortByUnitPrice(true)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              sortByUnitPrice
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            Unit Price
+          </button>
+        </div>
+      </div>
+
+      {sortedGroups.map((group, index) => {
         const sortedPrices = retailers
           .filter((r) => group.prices.has(r))
           .map((r) => ({ retailer: r, product: group.prices.get(r)! }))
-          .sort((a, b) => a.product.price - b.product.price);
+          .sort((a, b) =>
+            sortByUnitPrice
+              ? (a.product.unitPrice ?? Infinity) - (b.product.unitPrice ?? Infinity)
+              : a.product.price - b.product.price
+          );
+
+        // Whether the best unit-price retailer differs from the best total-price retailer
+        const bestValueDiffers =
+          group.bestUnitPriceRetailer != null &&
+          group.bestUnitPriceRetailer !== group.bestRetailer;
 
         return (
           <div
@@ -173,6 +247,13 @@ export default function ProductList({
                   </button>
                 )}
                 <button
+                  onClick={() => toggleFavorite(group)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  title={favSet.has(group.upc || group.name) ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart className={`h-4 w-4 ${favSet.has(group.upc || group.name) ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+                </button>
+                <button
                   onClick={() => {
                     const best = group.prices.get(group.bestRetailer)!;
                     shareProduct(group.name, best.price, retailerDisplayName(group.bestRetailer));
@@ -193,6 +274,10 @@ export default function ProductList({
               {retailers.map((retailer) => {
                 const entry = group.prices.get(retailer);
                 const isBest = retailer === group.bestRetailer && sortedPrices.length > 1;
+                const isBestValue =
+                  bestValueDiffers &&
+                  retailer === group.bestUnitPriceRetailer &&
+                  sortedPrices.length > 1;
 
                 return (
                   <div
@@ -201,7 +286,9 @@ export default function ProductList({
                       entry
                         ? isBest
                           ? "bg-green-50 ring-1 ring-green-300"
-                          : "bg-gray-50 dark:bg-slate-800/50"
+                          : isBestValue
+                            ? "bg-purple-50 ring-1 ring-purple-300"
+                            : "bg-gray-50 dark:bg-slate-800/50"
                         : "bg-gray-50 dark:bg-slate-800/50 opacity-40"
                     }`}
                   >
@@ -224,14 +311,25 @@ export default function ProductList({
                         >
                           {formatPrice(entry.price)}
                         </p>
-                        {entry.unitPrice && (
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                        {entry.unitPrice != null && (
+                          <p
+                            className={
+                              sortByUnitPrice
+                                ? "text-sm font-semibold text-gray-700 dark:text-gray-200"
+                                : "text-[10px] text-gray-400 dark:text-gray-500"
+                            }
+                          >
                             ${entry.unitPrice.toFixed(2)}/oz
                           </p>
                         )}
                         {isBest && (
                           <span className="inline-block mt-1 text-[9px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full">
                             BEST
+                          </span>
+                        )}
+                        {isBestValue && (
+                          <span className="inline-block mt-1 text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">
+                            BEST VALUE
                           </span>
                         )}
                         {entry.url && (

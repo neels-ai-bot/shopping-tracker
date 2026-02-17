@@ -6,8 +6,9 @@ import SearchBar from "@/components/SearchBar";
 import ProductList from "@/components/ProductList";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { ProductResult, Retailer } from "@/types";
-import { ShoppingCart, BarChart3, Bell, TrendingDown, Zap, MapPin, Clock, X, Flame } from "lucide-react";
+import { ShoppingCart, BarChart3, Bell, TrendingDown, Zap, MapPin, Clock, X, Flame, Heart, Trash2, Milk, Apple, Beef, Cookie, Coffee, SprayCan, Snowflake, Baby, Sparkles, Grid3X3 } from "lucide-react";
 import Link from "next/link";
+import { getFavorites, removeFavorite, FavoriteProduct } from "@/lib/favorites";
 
 interface LocationInfo {
   city: string;
@@ -26,6 +27,19 @@ const TRENDING_DEALS = [
   { name: "Colgate Total 5.1oz", retailer: "Amazon", price: 3.99, was: 5.49, pct: 27 },
 ];
 
+const BROWSE_CATEGORIES = [
+  { name: "Dairy & Eggs", query: "milk eggs cheese", icon: Milk, color: "text-blue-500" },
+  { name: "Produce", query: "fresh fruits vegetables", icon: Apple, color: "text-green-500" },
+  { name: "Meat", query: "chicken beef pork", icon: Beef, color: "text-red-500" },
+  { name: "Snacks", query: "chips cookies crackers", icon: Cookie, color: "text-amber-500" },
+  { name: "Beverages", query: "coffee soda juice", icon: Coffee, color: "text-brown-500" },
+  { name: "Cleaning", query: "detergent soap cleaner", icon: SprayCan, color: "text-purple-500" },
+  { name: "Frozen", query: "frozen pizza vegetables", icon: Snowflake, color: "text-cyan-500" },
+  { name: "Baby", query: "diapers formula wipes", icon: Baby, color: "text-pink-500" },
+  { name: "Personal Care", query: "toothpaste shampoo soap", icon: Sparkles, color: "text-teal-500" },
+  { name: "Cereal", query: "cereal oatmeal", icon: Cookie, color: "text-yellow-500" },
+];
+
 export default function HomePage() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductResult[]>([]);
@@ -36,12 +50,14 @@ export default function HomePage() {
   const [availableRetailers, setAvailableRetailers] = useState<Retailer[] | undefined>(undefined);
   const [zip, setZip] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteProduct[]>([]);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("recentSearches") || "[]");
       if (Array.isArray(saved)) setRecentSearches(saved.slice(0, MAX_RECENT));
     } catch { /* ignore */ }
+    setFavorites(getFavorites());
   }, []);
 
   const saveRecent = (query: string) => {
@@ -194,9 +210,88 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Favorites Section */}
+      {!searched && favorites.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Heart className="h-5 w-5 text-red-500" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Your Favorites</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+            {favorites.slice(0, 6).map((fav) => (
+              <button
+                key={fav.id}
+                className="group flex-shrink-0 w-36 p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all text-left relative"
+              >
+                <span
+                  onClick={() => handleSearch(fav.name.split(" ").slice(0, 3).join(" "))}
+                  className="block"
+                >
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {fav.name}
+                  </p>
+                  {fav.brand && (
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 truncate">{fav.brand}</p>
+                  )}
+                  <p className="text-base font-bold text-gray-900 dark:text-gray-100 mt-1.5">
+                    ${fav.lastPrice.toFixed(2)}
+                  </p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">{fav.lastRetailer}</p>
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const updated = removeFavorite(fav.id);
+                    setFavorites(updated);
+                  }}
+                  className="absolute top-1.5 right-1.5 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                >
+                  <Trash2 className="h-3 w-3 text-red-400" />
+                </button>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category Browse */}
+      {!searched && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Grid3X3 className="h-5 w-5 text-blue-500" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Browse by Category</h2>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {BROWSE_CATEGORIES.map((cat) => (
+              <button
+                key={cat.name}
+                onClick={() => handleSearch(cat.query)}
+                className="p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md dark:hover:shadow-slate-800/50 transition-all text-center group"
+              >
+                <cat.icon className={`h-6 w-6 mx-auto mb-1 ${cat.color} group-hover:scale-110 transition-transform`} />
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{cat.name}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Feature Cards (shown before search) */}
       {!searched && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+          <Link
+            href="/deals"
+            className="p-6 rounded-2xl border border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 shadow-sm hover:shadow-md transition-all group"
+          >
+            <Flame className="h-8 w-8 text-orange-500 mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Weekly Deals
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Browse this week&apos;s best sales and save big
+            </p>
+          </Link>
+
           <Link
             href="/compare"
             className="p-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md dark:hover:shadow-slate-800/50 transition-all group"

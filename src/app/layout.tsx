@@ -8,6 +8,7 @@ import {
   Bell,
   TrendingDown,
   BarChart3,
+  Flame,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -38,6 +39,7 @@ export const viewport: Viewport = {
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/deals", label: "Deals", icon: Flame },
   { href: "/compare", label: "Compare", icon: BarChart3 },
   { href: "/list", label: "List", icon: ShoppingCart },
   { href: "/alerts", label: "Alerts", icon: Bell },

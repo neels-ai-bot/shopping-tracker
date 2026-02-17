@@ -8,6 +8,7 @@ import ShrinkflationBadge from "@/components/ShrinkflationBadge";
 import { ComparisonResult } from "@/types";
 import { formatPrice, retailerDisplayName } from "@/lib/utils";
 import { ShoppingCart, TrendingUp } from "lucide-react";
+import PriceHistoryChart from "@/components/PriceHistoryChart";
 
 function CompareContent() {
   const searchParams = useSearchParams();
@@ -141,6 +142,15 @@ function CompareContent() {
               ))}
             </div>
           </div>
+
+          {/* Price History */}
+          {comparison.upc && sortedPrices.length > 0 && (
+            <PriceHistoryChart
+              productId={comparison.upc}
+              currentPrice={sortedPrices[0].price}
+              retailer={sortedPrices[0].retailer}
+            />
+          )}
 
           {/* Brand Equivalents */}
           {comparison.equivalents && comparison.equivalents.length > 0 && (
