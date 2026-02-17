@@ -6,7 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import ProductList from "@/components/ProductList";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { ProductResult, Retailer } from "@/types";
-import { ShoppingCart, BarChart3, Bell, TrendingDown, Zap, MapPin, Clock, X, Flame, Heart, Trash2, Milk, Apple, Beef, Cookie, Coffee, SprayCan, Snowflake, Baby, Sparkles, Grid3X3 } from "lucide-react";
+import { ShoppingCart, BarChart3, Bell, TrendingDown, Zap, MapPin, Clock, X, Flame, Heart, Trash2, Milk, Apple, Beef, Cookie, Coffee, SprayCan, Snowflake, Baby, Sparkles, Grid3X3, PieChart } from "lucide-react";
 import Link from "next/link";
 import { getFavorites, removeFavorite, FavoriteProduct } from "@/lib/favorites";
 
@@ -326,6 +326,19 @@ export default function HomePage() {
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Price Alerts</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Get notified when prices drop to your target
+            </p>
+          </Link>
+
+          <Link
+            href="/insights"
+            className="p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 shadow-sm hover:shadow-md transition-all group"
+          >
+            <PieChart className="h-8 w-8 text-emerald-600 mb-3 group-hover:scale-110 transition-transform" />
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Spending Insights
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Track spending trends, category breakdown &amp; savings
             </p>
           </Link>
 

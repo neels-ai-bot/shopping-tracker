@@ -9,6 +9,7 @@ import {
   TrendingDown,
   BarChart3,
   Flame,
+  PieChart,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -43,6 +44,7 @@ const navItems = [
   { href: "/compare", label: "Compare", icon: BarChart3 },
   { href: "/list", label: "List", icon: ShoppingCart },
   { href: "/alerts", label: "Alerts", icon: Bell },
+  { href: "/insights", label: "Insights", icon: PieChart },
   { href: "/shrinkflation", label: "Shrink", icon: TrendingDown },
 ];
 

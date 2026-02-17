@@ -4,13 +4,15 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ShoppingListComponent from "@/components/ShoppingList";
 import ReceiptScanner from "@/components/ReceiptScanner";
+import ListScanner from "@/components/ListScanner";
 import { ShoppingListItem, OptimizedRoute } from "@/types";
 import {
   formatPrice,
   retailerDisplayName,
   retailerColor,
 } from "@/lib/utils";
-import { FileText, Store, DollarSign, MapPin } from "lucide-react";
+import { FileText, Store, DollarSign, MapPin, Share2, Link, Users, UserPlus, Camera } from "lucide-react";
+import { decodeListFromUrl, shareList, SharedListData } from "@/lib/list-sharing";
 
 function ListContent() {
   const searchParams = useSearchParams();
@@ -20,12 +22,32 @@ function ListContent() {
   const [routes, setRoutes] = useState<OptimizedRoute[]>([]);
   const [loading, setLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showListScanner, setShowListScanner] = useState(false);
   const [tripCost, setTripCost] = useState(5);
   const [listId, setListId] = useState<string | null>(null);
+  const [sharedBy, setSharedBy] = useState("");
+  const [shareUserName, setShareUserName] = useState("");
+  const [showShareName, setShowShareName] = useState(false);
+  const [pendingSharedList, setPendingSharedList] = useState<SharedListData | null>(null);
 
   useEffect(() => {
     loadList();
+    const savedName = localStorage.getItem("shareUserName");
+    if (savedName) {
+      setShareUserName(savedName);
+    }
   }, []);
+
+  useEffect(() => {
+    const sharedParam = searchParams.get("shared");
+    if (sharedParam) {
+      const decoded = decodeListFromUrl(sharedParam);
+      if (decoded) {
+        setPendingSharedList(decoded);
+        setSharedBy(decoded.sharedBy || "Someone");
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (addItem && !items.some((i) => i.name === addItem)) {
@@ -158,6 +180,52 @@ function ListContent() {
     }
   };
 
+  const handleShareList = async () => {
+    if (items.length === 0) {
+      alert("Add items to your list first");
+      return;
+    }
+
+    const data: SharedListData = {
+      name: "Shopping List",
+      items: items.map((item) => ({ name: item.name, quantity: item.quantity })),
+      sharedBy: shareUserName || undefined,
+      sharedAt: new Date().toISOString(),
+    };
+
+    await shareList(data);
+  };
+
+  const handleImportSharedList = () => {
+    if (!pendingSharedList) return;
+
+    for (const item of pendingSharedList.items) {
+      handleAddItem(item.name);
+    }
+
+    setPendingSharedList(null);
+    setSharedBy("");
+
+    // Clear the shared param from URL without a full reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete("shared");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  };
+
+  const handleDismissSharedList = () => {
+    setPendingSharedList(null);
+    setSharedBy("");
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("shared");
+    window.history.replaceState({}, "", url.pathname + url.search);
+  };
+
+  const handleShareNameChange = (name: string) => {
+    setShareUserName(name);
+    localStorage.setItem("shareUserName", name);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -169,13 +237,92 @@ function ListContent() {
             Build your list and find the best store combination
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleShareList}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <Share2 className="h-4 w-4" />
+            Share List
+          </button>
+          <button
+            onClick={() => setShowListScanner(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <Camera className="h-4 w-4" />
+            Scan List
+          </button>
+          <button
+            onClick={() => setShowReceipt(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            <FileText className="h-4 w-4" />
+            Scan Receipt
+          </button>
+        </div>
+      </div>
+
+      {/* Shared List Banner */}
+      {pendingSharedList && (
+        <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <Users className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                  {"\uD83D\uDCCB"} {sharedBy} shared a list with you
+                </p>
+                <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                  {pendingSharedList.items.length} item{pendingSharedList.items.length !== 1 ? "s" : ""}: {pendingSharedList.items.map((i) => i.name).join(", ")}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleDismissSharedList}
+              className="text-purple-400 dark:text-purple-500 hover:text-purple-600 dark:hover:text-purple-300 text-lg leading-none ml-2"
+              aria-label="Dismiss"
+            >
+              &times;
+            </button>
+          </div>
+          <button
+            onClick={handleImportSharedList}
+            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors"
+          >
+            <UserPlus className="h-4 w-4" />
+            Import {pendingSharedList.items.length} item{pendingSharedList.items.length !== 1 ? "s" : ""}
+          </button>
+        </div>
+      )}
+
+      {/* Share Name Setting */}
+      <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
         <button
-          onClick={() => setShowReceipt(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
+          onClick={() => setShowShareName(!showShareName)}
+          className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
         >
-          <FileText className="h-4 w-4" />
-          Scan Receipt
+          <span className="flex items-center gap-2">
+            <Link className="h-4 w-4" />
+            Share Settings
+          </span>
+          <span className="text-gray-400 dark:text-gray-500 text-xs">
+            {showShareName ? "Hide" : "Show"}
+          </span>
         </button>
+        {showShareName && (
+          <div className="px-4 pb-3 border-t border-gray-100 dark:border-slate-700 pt-3">
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+              Your name (shown when sharing lists)
+            </label>
+            <input
+              type="text"
+              value={shareUserName}
+              onChange={(e) => handleShareNameChange(e.target.value)}
+              placeholder="Enter your name"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            />
+          </div>
+        )}
       </div>
 
       {/* Trip Cost Setting */}
@@ -307,6 +454,18 @@ function ListContent() {
         <ReceiptScanner
           onItemsDetected={handleReceiptItems}
           onClose={() => setShowReceipt(false)}
+        />
+      )}
+
+      {showListScanner && (
+        <ListScanner
+          onItemsDetected={(listItems) => {
+            setShowListScanner(false);
+            for (const item of listItems) {
+              handleAddItem(item);
+            }
+          }}
+          onClose={() => setShowListScanner(false)}
         />
       )}
     </div>
